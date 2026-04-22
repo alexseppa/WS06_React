@@ -38,12 +38,12 @@ app.use(express.static(publicDir));
 app.use('/api/posts', postsRouter);
 
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(publicDir, '404.html'));
+  res.status(404).json({ error: 'Not found' });
 });
 
 app.use((error, req, res, next) => {
   console.error(error.stack);
-  res.status(500).sendFile(path.join(publicDir, '500.html'));
+  res.status(500).json({ error: 'Server error' });
 });
 
 connectToDatabase().then(() => {
