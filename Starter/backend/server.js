@@ -3,18 +3,16 @@ const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-//const pagesRouter = require('./routes/pages');
 const postsRouter = require('./routes/posts');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const publicDir = path.join(__dirname, 'public');
 
-
 async function connectToDatabase() {
   try {
     if (!process.env.MONGODB_URI) {
-      console.warn('MONGODB_URI is missing. Create a .env file in backend/ before testing database features.');
+      console.warn('MONGODB_URI is missing');
       return;
     }
 
@@ -22,20 +20,25 @@ async function connectToDatabase() {
       dbName: 'blog' 
     });
 
-    console.log('Successfully connected to MongoDB (Database: blog)');
+    console.log('Successfully connected to MongoDB');
     
   } catch (err) {
     console.error('Failed to connect to MongoDB:', err.message);
   }
 }
 
-
 app.locals.publicDir = publicDir;
 app.use(express.json());
 app.use(express.static(publicDir));
 
-//app.use('/', pagesRouter);
 app.use('/api/posts', postsRouter);
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+  });
+}
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
@@ -49,8 +52,5 @@ app.use((error, req, res, next) => {
 connectToDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
-    console.log('Mounted routers:');
-    console.log('  / -> routes/pages.js');
-    console.log('  /api/posts -> routes/posts.js');
   });
 });
